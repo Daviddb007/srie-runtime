@@ -168,6 +168,42 @@ class SDK:
         from srie.sdk.models import Plan
         return Plan(objectives=["Improve project maturity"])
 
+    def session_start(self, user: str = "system") -> dict:
+        from srie.kernel.session import Session
+        s = Session(self._path)
+        session = s.start(user=user)
+        if self._runtime.journal():
+            self._runtime.journal().append({
+                "type": "SESSION_STARTED",
+                "source": "kernel",
+                "message": f"Session {session['id']} started by {user}",
+                "data": {"session_id": session["id"], "user": user},
+            })
+        return session
+
+    def session_end(self) -> dict:
+        from srie.kernel.session import Session
+        s = Session(self._path)
+        session = s.end()
+        if self._runtime.journal():
+            self._runtime.journal().append({
+                "type": "SESSION_ENDED",
+                "source": "kernel",
+                "message": f"Session {session['id']} ended — {session['duration_seconds']}s",
+                "data": {"session_id": session["id"], "duration": session["duration_seconds"]},
+            })
+        return session
+
+    def session_status(self) -> dict | None:
+        from srie.kernel.session import Session
+        s = Session(self._path)
+        return s.current()
+
+    def work_dna(self) -> dict:
+        from srie.services.work_log import WorkLog
+        wl = WorkLog(self._path)
+        return wl.dna()
+
     def _ensure_path(self) -> None:
         if not self._runtime.path:
             self._runtime._init_path(self._path)

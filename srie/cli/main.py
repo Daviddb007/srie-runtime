@@ -124,6 +124,35 @@ def age(
     """Show operational age of the runtime."""
     runtime_cmd.cmd_age(project_path)
 
+@runtime_typer.command()
+def session_start(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    user: str = typer.Option("system", "--user", "-u", help="User name"),
+):
+    """Start a new work session."""
+    runtime_cmd.cmd_session_start(project_path, user)
+
+@runtime_typer.command()
+def session_end(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """End the current work session."""
+    runtime_cmd.cmd_session_end(project_path)
+
+@runtime_typer.command()
+def session_status(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Show current or last session."""
+    runtime_cmd.cmd_session_status(project_path)
+
+@runtime_typer.command()
+def dna(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Show work DNA (aggregated session patterns)."""
+    runtime_cmd.cmd_dna(project_path)
+
 
 if __name__ == "__main__":
     app()

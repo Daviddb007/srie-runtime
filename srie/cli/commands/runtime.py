@@ -56,3 +56,56 @@ def cmd_age(project_path: str = "."):
     print(f"  Uptime: {age.get('uptime_seconds', 0)}s")
     print(f"  Checkpoints: {age.get('checkpoints', 0)}")
     print(f"  Hypotheses: {age.get('hypotheses', 0)} ({age.get('hypotheses_validated', 0)} validated)")
+
+
+def cmd_session_start(project_path: str = ".", user: str = "system"):
+    from srie.kernel.session import Session
+    from pathlib import Path
+    s = Session(Path(project_path).resolve())
+    session = s.start(user=user)
+    print(f"Session {session['id']} started — user: {user}")
+
+
+def cmd_session_end(project_path: str = "."):
+    from srie.kernel.session import Session
+    from pathlib import Path
+    s = Session(Path(project_path).resolve())
+    session = s.end()
+    print(f"Session {session['id']} ended — duration: {session['duration_seconds']}s")
+
+
+def cmd_session_status(project_path: str = "."):
+    from srie.kernel.session import Session
+    from pathlib import Path
+    s = Session(Path(project_path).resolve())
+    current = s.current()
+    if current:
+        print(f"Active session: {current['id']}")
+        print(f"  User: {current['user']}")
+        print(f"  Started: {current['started']}")
+        print(f"  Activities: {current.get('activity_count', 0)}")
+    else:
+        latest = s.latest()
+        if latest:
+            print(f"Last session: {latest['id']}")
+            print(f"  State: {latest.get('state', '?')}")
+            print(f"  Duration: {latest.get('duration_seconds', 0)}s")
+        else:
+            print("No sessions found.")
+
+
+def cmd_dna(project_path: str = "."):
+    from srie.services.work_log import WorkLog
+    from pathlib import Path
+    wl = WorkLog(Path(project_path).resolve())
+    dna = wl.dna()
+    if dna["total_sessions"] == 0:
+        print("No work history yet.")
+        return
+    print(f"Work DNA — {dna['total_sessions']} sessions, {dna['total_activities']} activities")
+    print(f"  Total hypotheses: {dna['total_hypotheses']}")
+    print(f"  Overall confidence: {dna['overall_confidence']:.2f}")
+    print(f"  Type distribution:")
+    for atype, count in sorted(dna['type_distribution'].items()):
+        bar = chr(9608) * count + chr(9617) * (10 - count)
+        print(f"    {atype:15s} {count:3d} {bar}")

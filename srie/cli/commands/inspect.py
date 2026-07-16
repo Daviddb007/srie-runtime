@@ -8,6 +8,7 @@ def cmd_inspect(project_path: str = ".", section: str | None = None):
     sections = {
         "identity": _inspect_identity,
         "runtime": _inspect_runtime,
+        "universe": _inspect_universe,
         "cognitive": _inspect_cognitive,
         "tasks": _inspect_tasks,
         "modules": _inspect_modules,
@@ -88,6 +89,7 @@ def _build_full_tree(sdk: SDK) -> dict:
         "children": [
             _inspect_identity(sdk),
             _inspect_runtime(sdk),
+            _inspect_universe(sdk),
             _inspect_workspace(sdk),
             _inspect_cognitive(sdk),
             _inspect_tasks(sdk),
@@ -176,6 +178,22 @@ def _inspect_modules(sdk: SDK) -> dict:
         children.append({"label": f"{mod.id} v{mod.version}", "value": mod.state})
     return {"label": "Modules", "children": children}
 
+
+def _inspect_universe(sdk: SDK) -> dict:
+    from srie.kernel.universe import Universe
+    u = Universe(sdk.path)
+    try:
+        twin = u.twin()
+    except FileNotFoundError:
+        return {"label": "Universe", "children": [{"label": "Not initialized (run: srie universe init)"}]}
+    children = [
+        {"label": f"Orgs: {twin['total_organizations']}"},
+        {"label": f"Workspaces: {twin['total_workspaces']}"},
+        {"label": f"Projects: {twin['total_projects']}"},
+        {"label": f"Domains: {twin['total_domains']}"},
+        {"label": f"State: {twin['state']}"},
+    ]
+    return {"label": "Universe", "children": children}
 
 def _inspect_workspace(sdk: SDK) -> dict:
     from srie.kernel.workspace import Workspace

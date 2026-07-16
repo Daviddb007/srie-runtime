@@ -26,4 +26,4 @@ def test_full_tree(tmp_path: Path):
     sdk.init()
     tree = _build_full_tree(sdk)
     assert tree["label"].startswith("SRIE Runtime")
-    assert len(tree["children"]) == 7
+    assert len(tree["children"]) == 8

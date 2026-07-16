@@ -32,6 +32,7 @@ from srie.cli.commands import discover as discover_cmd
 from srie.cli.commands import indicators as indicators_cmd
 from srie.cli.commands import runtime as runtime_cmd
 from srie.cli.commands import inspect as inspect_cmd
+from srie.cli.commands import universe as universe_cmd
 
 @app.command()
 def doctor():
@@ -185,6 +186,65 @@ def history(
 ):
     """Show recent runtime history."""
     inspect_cmd.cmd_history(project_path, limit)
+
+
+universe_typer = typer.Typer(name="universe", help="Universe management commands")
+app.add_typer(universe_typer)
+
+@universe_typer.command()
+def init(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    name: str = typer.Option("default", "--name", "-n", help="Universe name"),
+):
+    """Initialize a SRIE Universe."""
+    universe_cmd.cmd_init(project_path, name)
+
+@universe_typer.command()
+def status(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Show universe status."""
+    universe_cmd.cmd_status(project_path)
+
+@universe_typer.command()
+def org(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    name: str = typer.Argument("default", help="Organization name"),
+):
+    """Register an organization."""
+    universe_cmd.cmd_org_add(project_path, name)
+
+@universe_typer.command()
+def workspace(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    name: str = typer.Argument("default", help="Workspace name"),
+    org: str = typer.Option(None, "--org", help="Parent organization ID"),
+):
+    """Register a workspace."""
+    universe_cmd.cmd_ws_add(project_path, name, org)
+
+@universe_typer.command()
+def project(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    name: str = typer.Argument("default", help="Project name"),
+    workspace: str = typer.Option(None, "--workspace", help="Parent workspace ID"),
+):
+    """Register a project."""
+    universe_cmd.cmd_project_add(project_path, name, workspace)
+
+@universe_typer.command()
+def chain(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Show ownership chain."""
+    universe_cmd.cmd_chain(project_path)
+
+@universe_typer.command()
+def twin(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Show Universe Digital Twin."""
+    universe_cmd.cmd_twin(project_path)
 
 
 if __name__ == "__main__":

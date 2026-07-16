@@ -1,0 +1,14 @@
+id: capability
+version: "1.0.0"
+entrypoint: capability.py
+kind: module
+depends_on:
+  - discovery
+  - indicators
+provides:
+  - capability
+produces:
+  - type: CapabilityMatch
+    fields: [capabilities, assignments, resources, cost]
+consumes:
+  - type: Project

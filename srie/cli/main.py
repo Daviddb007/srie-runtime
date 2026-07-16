@@ -37,6 +37,7 @@ from srie.cli.commands import studio as studio_cmd
 from srie.cli.commands import execution as execution_cmd
 from srie.cli.commands import pdl as pdl_cmd
 from srie.cli.commands import planner as planner_cmd
+from srie.cli.commands import capability as cap_cmd
 
 @app.command()
 def doctor():
@@ -375,6 +376,33 @@ def orchestrate(
 ):
     """Plan, optimize, and execute in one command."""
     planner_cmd.cmd_execute(project_path, goal)
+
+
+cap_typer = typer.Typer(name="cap", help="Capability Engine commands")
+app.add_typer(cap_typer)
+
+@cap_typer.command()
+def list(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """List all registered capabilities."""
+    cap_cmd.cmd_list(project_path)
+
+@cap_typer.command()
+def match(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    action: str = typer.Argument("discover", help="Action to match"),
+):
+    """Find capabilities for an action."""
+    cap_cmd.cmd_match(project_path, action)
+
+@cap_typer.command()
+def plan(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    goal: str = typer.Option("Build MVP", "--goal", "-g", help="Goal"),
+):
+    """Show capability assignments for a goal."""
+    cap_cmd.cmd_plan(project_path, goal)
 
 
 if __name__ == "__main__":

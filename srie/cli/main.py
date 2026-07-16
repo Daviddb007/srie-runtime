@@ -39,6 +39,7 @@ from srie.cli.commands import pdl as pdl_cmd
 from srie.cli.commands import planner as planner_cmd
 from srie.cli.commands import capability as cap_cmd
 from srie.cli.commands import ops as ops_cmd
+from srie.cli.commands import knowledge as knowledge_cmd
 
 @app.command()
 def doctor():
@@ -475,6 +476,55 @@ def rollback(
 ):
     """Rollback last deployment."""
     ops_cmd.deploy_rollback(project_path, target_id)
+
+
+@app.command()
+def pattern(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    pattern_type: str = typer.Option("success", "--type", "-t", help="Pattern type"),
+    title: str = typer.Option("Pattern", "--title", "-n", help="Pattern title"),
+    description: str = typer.Option("", "--desc", "-d", help="Pattern description"),
+):
+    """Extract a knowledge pattern."""
+    knowledge_cmd.pattern_extract(project_path, pattern_type, title, description)
+
+@app.command()
+def case(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    action: str = typer.Option("discover", "--action", "-a", help="Action name"),
+    outcome: str = typer.Option("success", "--outcome", "-o", help="Outcome"),
+    score: float = typer.Option(0.9, "--score", "-s", help="Confidence score"),
+):
+    """Store an execution case."""
+    knowledge_cmd.case_store(project_path, action, outcome, score)
+
+@app.command()
+def knowledge(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Show knowledge base status."""
+    knowledge_cmd.knowledge_status(project_path)
+
+@app.command()
+def drift(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Detect project drift."""
+    knowledge_cmd.drift(project_path)
+
+@app.command()
+def evolve(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Get evolution suggestions."""
+    knowledge_cmd.evolve(project_path)
+
+@app.command()
+def auto(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Auto-evolve: detect, suggest, and apply improvements."""
+    knowledge_cmd.auto_evolve(project_path)
 
 
 if __name__ == "__main__":

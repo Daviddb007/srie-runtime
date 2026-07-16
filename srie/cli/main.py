@@ -38,6 +38,7 @@ from srie.cli.commands import execution as execution_cmd
 from srie.cli.commands import pdl as pdl_cmd
 from srie.cli.commands import planner as planner_cmd
 from srie.cli.commands import capability as cap_cmd
+from srie.cli.commands import ops as ops_cmd
 
 @app.command()
 def doctor():
@@ -403,6 +404,77 @@ def plan(
 ):
     """Show capability assignments for a goal."""
     cap_cmd.cmd_plan(project_path, goal)
+
+
+ops_typer = typer.Typer(name="ops", help="Sandbox, Repair, and Deployment commands")
+app.add_typer(ops_typer)
+
+@ops_typer.command()
+def sandbox(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    name: str = typer.Option("sandbox-test", "--name", "-n", help="Sandbox name"),
+):
+    """Create a sandbox environment."""
+    ops_cmd.sandbox_create(project_path, name)
+
+@ops_typer.command()
+def test(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    env_id: str = typer.Option("", "--env", "-e", help="Sandbox environment ID"),
+    test_name: str = typer.Option("verify-action", "--name", "-n", help="Test name"),
+    action: str = typer.Option("verify", "--action", "-a", help="Action to test"),
+):
+    """Run a test in sandbox."""
+    ops_cmd.sandbox_test(project_path, env_id, test_name, action)
+
+@ops_typer.command()
+def report(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    env_id: str = typer.Option("", "--env", "-e", help="Sandbox environment ID"),
+):
+    """Get sandbox test report."""
+    ops_cmd.sandbox_report(project_path, env_id)
+
+@ops_typer.command()
+def diagnose(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Diagnose system issues."""
+    ops_cmd.repair_diagnose(project_path)
+
+@ops_typer.command()
+def fix(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Auto-fix detected issues."""
+    ops_cmd.repair_fix(project_path)
+
+@ops_typer.command()
+def target(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    name: str = typer.Option("production", "--name", "-n", help="Target name"),
+    environment: str = typer.Option("production", "--env", "-e", help="Environment type"),
+    url: str = typer.Option("", "--url", "-u", help="Target URL"),
+):
+    """Register a deployment target."""
+    ops_cmd.deploy_target(project_path, name, environment, url)
+
+@ops_typer.command()
+def deploy(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    target_id: str = typer.Option("", "--target", "-t", help="Target ID"),
+    version: str = typer.Option("1.0.0", "--version", "-v", help="Version to deploy"),
+):
+    """Deploy to a target."""
+    ops_cmd.deploy_run(project_path, target_id, version)
+
+@ops_typer.command()
+def rollback(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    target_id: str = typer.Option("", "--target", "-t", help="Target ID"),
+):
+    """Rollback last deployment."""
+    ops_cmd.deploy_rollback(project_path, target_id)
 
 
 if __name__ == "__main__":

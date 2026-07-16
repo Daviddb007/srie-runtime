@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SRIE Mission Control</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --text: #e2e8f0; --text2: #94a3b8; --accent: #3b82f6;
+    --green: #22c55e; --amber: #f59e0b; --red: #ef4444;
+    --border: #334155;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; }
+  .sidebar h1 { font-size: 14px; font-weight: 600; padding: 0 16px 16px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar .room { display: block; padding: 10px 16px; color: var(--text2); text-decoration: none; font-size: 13px; border-left: 3px solid transparent; cursor: pointer; }
+  .sidebar .room:hover { background: var(--surface2); color: var(--text); }
+  .sidebar .room.active { border-left-color: var(--accent); color: var(--accent); background: rgba(59,130,246,0.1); }
+  .main { padding: 24px; overflow-y: auto; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .header h2 { font-size: 20px; font-weight: 600; }
+  .header .status { font-size: 12px; padding: 4px 10px; border-radius: 12px; background: var(--surface2); color: var(--text2); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .card h3 { font-size: 13px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .card .value { font-size: 28px; font-weight: 700; }
+  .card .value.green { color: var(--green); }
+  .card .value.amber { color: var(--amber); }
+  .card .value.red { color: var(--red); }
+  .card .value.blue { color: var(--accent); }
+  .card p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+  .tree { font-family: monospace; font-size: 12px; line-height: 1.6; }
+  .tree .node { padding-left: 16px; border-left: 1px solid var(--border); margin-left: 8px; }
+  .tree .label { color: var(--text); }
+  .tree .value { color: var(--text2); }
+  .event { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .event:last-child { border-bottom: none; }
+  .event .ts { color: var(--text2); font-family: monospace; font-size: 11px; }
+  .event .src { color: var(--accent); }
+  .question-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+  .question-bar input { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 14px; outline: none; }
+  .question-bar input:focus { border-color: var(--accent); }
+  .question-bar button { padding: 10px 20px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .question-bar button:hover { opacity: 0.9; }
+  .loading { text-align: center; padding: 40px; color: var(--text2); }
+  .module-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .module-tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; background: var(--surface2); }
+  .module-tag.loaded { background: rgba(34,197,94,0.2); color: var(--green); }
+  .module-tag.error { background: rgba(239,68,68,0.2); color: var(--red); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <h1>Mission Control</h1>
+    <a class="room active" data-room="universe" onclick="switchRoom('universe')">Universe</a>
+    <a class="room" data-room="operations" onclick="switchRoom('operations')">Operations</a>
+    <a class="room" data-room="intelligence" onclick="switchRoom('intelligence')">Intelligence</a>
+    <a class="room" data-room="knowledge" onclick="switchRoom('knowledge')">Knowledge</a>
+    <a class="room" data-room="governance" onclick="switchRoom('governance')">Governance</a>
+  </nav>
+  <main class="main">
+    <div class="header">
+      <h2 id="room-title">Universe</h2>
+      <span class="status" id="room-status">Operational</span>
+    </div>
+    <div class="question-bar">
+      <input type="text" id="question-input" placeholder="Ask a question... (e.g., 'what is happening', 'why is this degraded')" onkeydown="if(event.key==='Enter')ask()">
+      <button onclick="ask()">Ask</button>
+    </div>
+    <div id="room-content"></div>
+  </main>
+</div>
+
+<script>
+const ROOMS = {
+  universe: { title: 'Universe', status: 'Operational', load: loadUniverse },
+  operations: { title: 'Operations', status: 'Runtime Active', load: loadOperations },
+  intelligence: { title: 'Intelligence', status: 'Cognitive Active', load: loadIntelligence },
+  knowledge: { title: 'Knowledge', status: 'Journal Active', load: loadKnowledge },
+  governance: { title: 'Governance', status: 'Identity Active', load: loadGovernance },
+};
+
+function switchRoom(name) {
+  document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+  document.querySelector(`[data-room="${name}"]`).classList.add('active');
+  const room = ROOMS[name];
+  document.getElementById('room-title').textContent = room.title;
+  document.getElementById('room-status').textContent = room.status;
+  room.load();
+}
+
+function ask() {
+  const q = document.getElementById('question-input').value.toLowerCase();
+  if (q.includes('why') || q.includes('degraded') || q.includes('failed')) loadWhy();
+  else if (q.includes('history') || q.includes('changed') || q.includes('happened')) loadHistory();
+  else if (q.includes('explain') || q.includes('decision')) loadExplain();
+  else loadInspect();
+  document.getElementById('question-input').value = '';
+}
+
+function setContent(html) {
+  document.getElementById('room-content').innerHTML = html;
+}
+
+async function fetchJSON(url) {
+  const r = await fetch(url);
+  return r.json();
+}
+
+function loading() {
+  setContent('<div class="loading">Loading...</div>');
+}
+
+async function loadUniverse() {
+  loading();
+  const twin = await fetchJSON('/api/universe');
+  const identity = await fetchJSON('/api/identity');
+  const runtime = await fetchJSON('/api/runtime');
+  setContent(`
+    <div class="grid">
+      <div class="card"><h3>Identity</h3><div class="value blue">${identity.name || 'N/A'}</div><p>${identity.domain_id || ''}</p></div>
+      <div class="card"><h3>Organizations</h3><div class="value blue">${twin.total_organizations || 0}</div></div>
+      <div class="card"><h3>Workspaces</h3><div class="value blue">${twin.total_workspaces || 0}</div></div>
+      <div class="card"><h3>Projects</h3><div class="value blue">${twin.total_projects || 0}</div></div>
+      <div class="card"><h3>Domains</h3><div class="value blue">${twin.total_domains || 0}</div></div>
+      <div class="card"><h3>Runtime State</h3><div class="value ${runtime.state === 'RUNNING' ? 'green' : 'amber'}">${runtime.state || 'N/A'}</div></div>
+      <div class="card"><h3>Checkpoints</h3><div class="value blue">${runtime.checkpoints || 0}</div></div>
+      <div class="card"><h3>Modules</h3><div class="value blue">${runtime.modules ? runtime.modules.length : 0}</div>
+        <div class="module-list">${(runtime.modules || []).map(m => `<span class="module-tag ${m.state.toLowerCase()}">${m.id}</span>`).join('')}</div>
+      </div>
+    </div>
+    ${twin.organizations ? `<div class="card" style="margin-top:16px"><h3>Organizations</h3><p>${twin.organizations.join(', ') || 'None'}</p></div>` : ''}
+  `);
+}
+
+async function loadOperations() {
+  loading();
+  const runtime = await fetchJSON('/api/runtime');
+  const sessions = await fetchJSON('/api/sessions');
+  const why = await fetchJSON('/api/why');
+  setContent(`
+    <div class="grid">
+      <div class="card"><h3>Runtime State</h3><div class="value green">${why.state || 'N/A'}</div></div>
+      <div class="card"><h3>Uptime</h3><div class="value blue">${runtime.version || 'N/A'}</div><p>Version</p></div>
+      <div class="card"><h3>Checkpoints</h3><div class="value blue">${why.checkpoints || 0}</div></div>
+      <div class="card"><h3>Sessions</h3><div class="value blue">${sessions.total || 0}</div>
+        ${sessions.current ? `<p>Active: ${sessions.current.id}</p>` : '<p>No active session</p>'}
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px"><h3>Modules</h3>
+      <div class="module-list">${(runtime.modules || []).map(m => `<span class="module-tag ${m.state.toLowerCase()}">${m.id} v${m.version}</span>`).join('')}</div>
+    </div>
+    <div class="card" style="margin-top:16px"><h3>Recent Events</h3>
+      <div id="history-content">Loading...</div>
+    </div>
+  `);
+  loadHistoryInto('history-content');
+}
+
+async function loadIntelligence() {
+  loading();
+  const cognitive = await fetchJSON('/api/cognitive');
+  const hyps = cognitive.hypotheses || {};
+  const intent = cognitive.intent || {};
+  const hypList = Object.values(hyps.hypotheses || {}).slice(0, 10);
+  setContent(`
+    <div class="grid">
+      <div class="card"><h3>Intent</h3><div class="value blue">${intent.objective || 'None'}</div><p>Priority: ${intent.priority || 'N/A'}</p></div>
+      <div class="card"><h3>Hypotheses</h3><div class="value blue">${hyps.total || 0}</div>
+        <p>${hyps.validated || 0} validated, ${hyps.active || 0} active</p>
+      </div>
+      <div class="card"><h3>Confidence</h3><div class="value blue">${hyps.total > 0 ? 'Active' : 'N/A'}</div></div>
+    </div>
+    ${hypList.length ? `<div class="card" style="margin-top:16px"><h3>Active Hypotheses</h3>
+      ${hypList.map(h => `<div class="event"><span class="src">[${h.status}]</span> ${h.description || h.id} <span class="ts">confidence: ${(h.confidence || 0).toFixed(2)}</span></div>`).join('')}
+    </div>` : '<div class="card" style="margin-top:16px"><p>No hypotheses yet. Run discovery first.</p></div>'}
+  `);
+}
+
+async function loadKnowledge() {
+  loading();
+  const dna = await fetchJSON('/api/dna');
+  const history = await fetchJSON('/api/history?limit=20');
+  setContent(`
+    <div class="grid">
+      <div class="card"><h3>Total Sessions</h3><div class="value blue">${dna.total_sessions || 0}</div></div>
+      <div class="card"><h3>Total Activities</h3><div class="value blue">${dna.total_activities || 0}</div></div>
+      <div class="card"><h3>Hypotheses</h3><div class="value blue">${dna.total_hypotheses || 0}</div></div>
+      <div class="card"><h3>Confidence</h3><div class="value blue">${dna.overall_confidence ? dna.overall_confidence.toFixed(2) : 'N/A'}</div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><h3>Journal</h3>
+      ${(history || []).slice(0, 15).map(e => `<div class="event"><span class="ts">[${e.timestamp}]</span> <span class="src">${e.source}</span>: ${e.message}</div>`).join('')}
+    </div>
+  `);
+}
+
+async function loadGovernance() {
+  loading();
+  const identity = await fetchJSON('/api/identity');
+  setContent(`
+    <div class="grid">
+      <div class="card"><h3>Domain ID</h3><div class="value blue">${identity.domain_id || 'N/A'}</div></div>
+      <div class="card"><h3>Name</h3><div class="value blue">${identity.name || 'N/A'}</div></div>
+      <div class="card"><h3>Type</h3><div class="value blue">${identity.type || 'N/A'}</div></div>
+      <div class="card"><h3>State</h3><div class="value green">${identity.state || 'N/A'}</div></div>
+      <div class="card" style="grid-column: span 2"><h3>Fingerprint</h3><p style="font-family:monospace;font-size:12px">${identity.fingerprint || 'N/A'}</p></div>
+    </div>
+  `);
+}
+
+async function loadInspect() {
+  loading();
+  const data = await fetchJSON('/api/inspect');
+  setContent(`<div class="card"><h3>System State</h3><div class="tree">${renderTree(data)}</div></div>`);
+}
+
+async function loadWhy() {
+  loading();
+  const why = await fetchJSON('/api/why');
+  setContent(`
+    <div class="card"><h3>Runtime Status</h3>
+      <p>State: <strong>${why.state}</strong></p>
+      <p>Born: ${why.born || 'N/A'}</p>
+      <p>Checkpoints: ${why.checkpoints}</p>
+      <p>Modules: ${why.modules}</p>
+    </div>
+  `);
+}
+
+async function loadHistory() {
+  loading();
+  const history = await fetchJSON('/api/history?limit=50');
+  setContent(`<div class="card"><h3>Event History</h3>
+    ${(history || []).map(e => `<div class="event"><span class="ts">[${e.timestamp}]</span> <span class="src">${e.source}</span>: ${e.message}</div>`).join('')}
+  </div>`);
+}
+
+async function loadExplain() {
+  loading();
+  const cognitive = await fetchJSON('/api/cognitive');
+  const hyps = cognitive.hypotheses || {};
+  setContent(`<div class="card"><h3>System Explanation</h3>
+    <p>Active hypotheses: ${hyps.total || 0}</p>
+    <p>Validated: ${hyps.validated || 0}</p>
+    <p>Archived: ${hyps.archived || 0}</p>
+  </div>`);
+}
+
+async function loadHistoryInto(elemId) {
+  const history = await fetchJSON('/api/history?limit=10');
+  document.getElementById(elemId).innerHTML = (history || []).map(e =>
+    `<div class="event"><span class="ts">[${e.timestamp}]</span> <span class="src">${e.source}</span>: ${e.message}</div>`
+  ).join('');
+}
+
+function renderTree(node, depth = 0) {
+  if (!node) return '';
+  const indent = '&nbsp;&nbsp;'.repeat(depth);
+  let html = `<div class="tree" style="padding-left:${depth*16}px">`;
+  html += `<span class="label">${node.label || ''}</span>`;
+  if (node.value) html += ` <span class="value">[${node.value}]</span>`;
+  html += '</div>';
+  if (node.children) {
+    node.children.forEach(c => { html += renderTree(c, depth + 1); });
+  }
+  return html;
+}
+
+switchRoom('{{ room }}');
+</script>
+</body>
+</html>

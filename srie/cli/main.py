@@ -33,6 +33,7 @@ from srie.cli.commands import indicators as indicators_cmd
 from srie.cli.commands import runtime as runtime_cmd
 from srie.cli.commands import inspect as inspect_cmd
 from srie.cli.commands import universe as universe_cmd
+from srie.cli.commands import studio as studio_cmd
 
 @app.command()
 def doctor():
@@ -245,6 +246,19 @@ def twin(
 ):
     """Show Universe Digital Twin."""
     universe_cmd.cmd_twin(project_path)
+
+
+studio_typer = typer.Typer(name="studio", help="Mission Control commands")
+app.add_typer(studio_typer)
+
+@studio_typer.command()
+def serve(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    host: str = typer.Option("127.0.0.1", "--host", help="Host to bind"),
+    port: int = typer.Option(5000, "--port", "-p", help="Port to bind"),
+):
+    """Start SRIE Mission Control web interface."""
+    studio_cmd.cmd_serve(project_path, host, port)
 
 
 if __name__ == "__main__":

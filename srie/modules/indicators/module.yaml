@@ -1,0 +1,17 @@
+id: indicators
+version: "1.0.0"
+entrypoint: indicators.py
+kind: module
+
+depends_on:
+  - discovery
+
+provides:
+  - indicators
+
+produces:
+  - type: IndicatorReport
+    fields: [srie_score, maturity_level, by_domain, confidence, trends]
+
+consumes:
+  - type: DigitalTwin

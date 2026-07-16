@@ -21,20 +21,20 @@ class ModuleResolver:
         return modules
 
     def resolve_dag(self, modules: list[dict]) -> list[dict]:
-        graph = {}
+        graph: dict[str, list[str]] = {}
         for mod in modules:
             mid = mod["id"]
             deps = mod.get("depends_on", []) or []
-            graph[mid] = [d for d in deps if any(m["id"] == d for m in modules)]
+            graph[mid] = [d for d in deps if any(m2["id"] == d for m2 in modules)]
 
-        in_degree = {mid: 0 for mid in graph}
+        in_degree: dict[str, int] = {}
         for mid, deps in graph.items():
+            in_degree[mid] = len(deps)
             for dep in deps:
-                if dep in graph:
-                    in_degree[dep] = in_degree.get(dep, 0) + 1
+                in_degree.setdefault(dep, 0)
 
         queue = [mid for mid, deg in in_degree.items() if deg == 0]
-        result = []
+        result: list[dict] = []
         while queue:
             node = queue.pop(0)
             result.append([m for m in modules if m["id"] == node][0])

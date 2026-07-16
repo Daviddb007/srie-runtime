@@ -1,0 +1,15 @@
+id: hello
+version: "1.0.0"
+entrypoint: hello.py
+kind: module
+
+depends_on: []
+
+provides:
+  - hello
+
+produces:
+  - type: str
+    fields: [message]
+
+consumes: {}

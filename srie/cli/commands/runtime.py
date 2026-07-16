@@ -1,9 +1,7 @@
 from srie.sdk.client import SDK
 
 
-def cmd(
-    project_path: str = ".",
-):
+def cmd(project_path: str = "."):
     sdk = SDK(project_path)
     manifest = sdk.manifest()
     if manifest:
@@ -17,30 +15,44 @@ def cmd(
         print("Runtime not initialized. Run 'srie init' first.")
 
 
-def modules_cmd(project_path: str = "."):
-    from srie.services.loader.resolver import ModuleResolver
-    from pathlib import Path
-
-    modules_dir = Path(__file__).parent.parent.parent / "modules"
-    resolver = ModuleResolver()
-    discovered = resolver.discover(modules_dir)
-
-    if not discovered:
-        print("No modules found.")
-        return
-
-    print(f"Discovered {len(discovered)} modules:")
-    for mod in discovered:
-        deps = ", ".join(mod.get("depends_on", []) or [])
-        print(f"  - {mod['id']} v{mod.get('version', '?')} [depends: {deps or 'none'}]")
-
-
-def lock_cmd(project_path: str = "."):
+def cmd_pause(project_path: str = "."):
     sdk = SDK(project_path)
-    manifest = sdk.manifest()
-    if manifest:
-        print(f"Runtime Lock — {manifest.state}")
-        print(f"  Created: {manifest.created.isoformat()}")
-        print(f"  Updated: {manifest.updated.isoformat()}")
-    else:
-        print("No runtime.lock found.")
+    sdk.pause()
+    print(f"Runtime paused. State: SUSPENDED")
+
+
+def cmd_resume(project_path: str = "."):
+    sdk = SDK(project_path)
+    sdk.resume()
+    print(f"Runtime resumed. State: RUNNING")
+
+
+def cmd_checkpoint(project_path: str = "."):
+    sdk = SDK(project_path)
+    cp_id = sdk.checkpoint()
+    print(f"Checkpoint #{cp_id} created")
+
+
+def cmd_journal(project_path: str = ".", limit: int = 10):
+    sdk = SDK(project_path)
+    events = sdk.journal(limit)
+    if not events:
+        print("No journal entries found.")
+        return
+    print(f"Recent journal entries ({len(events)}):")
+    for evt in events:
+        ts = evt.get("timestamp", "?")[:19]
+        source = evt.get("source", "?")
+        msg = evt.get("message", evt.get("type", "?"))
+        print(f"  [{ts}] {source}: {msg}")
+
+
+def cmd_age(project_path: str = "."):
+    sdk = SDK(project_path)
+    age = sdk.operational_age()
+    print(f"Operational Age:")
+    print(f"  Born: {age.get('born', 'N/A')}")
+    print(f"  State: {age.get('state', 'N/A')}")
+    print(f"  Uptime: {age.get('uptime_seconds', 0)}s")
+    print(f"  Checkpoints: {age.get('checkpoints', 0)}")
+    print(f"  Hypotheses: {age.get('hypotheses', 0)} ({age.get('hypotheses_validated', 0)} validated)")

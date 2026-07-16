@@ -88,6 +88,42 @@ def status(
     """Show runtime status."""
     runtime_cmd.cmd(project_path)
 
+@runtime_typer.command()
+def pause(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Pause runtime and create checkpoint."""
+    runtime_cmd.cmd_pause(project_path)
+
+@runtime_typer.command()
+def resume(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Resume runtime from last checkpoint."""
+    runtime_cmd.cmd_resume(project_path)
+
+@runtime_typer.command()
+def checkpoint(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Create a runtime checkpoint."""
+    runtime_cmd.cmd_checkpoint(project_path)
+
+@runtime_typer.command()
+def journal(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    limit: int = typer.Option(10, "--limit", "-n", help="Number of entries"),
+):
+    """Show recent journal entries."""
+    runtime_cmd.cmd_journal(project_path, limit)
+
+@runtime_typer.command()
+def age(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Show operational age of the runtime."""
+    runtime_cmd.cmd_age(project_path)
+
 
 if __name__ == "__main__":
     app()

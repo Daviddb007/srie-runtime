@@ -7,6 +7,7 @@ class RuntimeState(str, Enum):
     STARTING = "STARTING"
     RUNNING = "RUNNING"
     PAUSED = "PAUSED"
+    SUSPENDED = "SUSPENDED"
     STOPPING = "STOPPING"
     FAILED = "FAILED"
 
@@ -14,8 +15,9 @@ class RuntimeState(str, Enum):
 VALID_TRANSITIONS = {
     RuntimeState.STOPPED: [RuntimeState.STARTING],
     RuntimeState.STARTING: [RuntimeState.RUNNING, RuntimeState.FAILED, RuntimeState.STOPPING],
-    RuntimeState.RUNNING: [RuntimeState.PAUSED, RuntimeState.STOPPING, RuntimeState.FAILED],
-    RuntimeState.PAUSED: [RuntimeState.RUNNING, RuntimeState.STOPPING],
+    RuntimeState.RUNNING: [RuntimeState.PAUSED, RuntimeState.SUSPENDED, RuntimeState.STOPPING, RuntimeState.FAILED],
+    RuntimeState.PAUSED: [RuntimeState.RUNNING, RuntimeState.SUSPENDED, RuntimeState.STOPPING],
+    RuntimeState.SUSPENDED: [RuntimeState.RUNNING, RuntimeState.STOPPED, RuntimeState.FAILED],
     RuntimeState.STOPPING: [RuntimeState.STOPPED, RuntimeState.FAILED],
     RuntimeState.FAILED: [RuntimeState.STOPPED],
 }

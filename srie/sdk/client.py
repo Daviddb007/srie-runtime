@@ -37,7 +37,6 @@ class SDK:
     def discover(self) -> DiscoveryResult:
         self._ensure_booted()
         import importlib.util
-        from pathlib import Path
         scanner_path = Path(__file__).parent.parent / "modules" / "discovery" / "scanner.py"
         spec = importlib.util.spec_from_file_location("discovery_scanner", scanner_path)
         if spec and spec.loader:
@@ -49,6 +48,7 @@ class SDK:
             result = DiscoveryResult(languages=[], frameworks=[])
             self._last_discovery = result
             return result
+
         self._last_discovery = result
 
         if result.graph:
@@ -61,6 +61,14 @@ class SDK:
             version=1,
         )
         self._twin_repo.save(self._path, twin)
+
+        if self._runtime.journal():
+            self._runtime.journal().append({
+                "type": "DISCOVERY_COMPLETE",
+                "source": "module:discovery",
+                "message": f"Discovered {len(result.languages)} languages, {len(result.frameworks)} frameworks, {result.files.total if result.files else 0} files",
+                "data": {"confidence": result.confidence, "languages": [l.name for l in result.languages]},
+            })
 
         return result
 
@@ -95,6 +103,14 @@ class SDK:
             twin.version += 1
             self._twin_repo.save(self._path, twin)
 
+        if self._runtime.journal():
+            self._runtime.journal().append({
+                "type": "INDICATORS_CALCULATED",
+                "source": "module:indicators",
+                "message": f"SRIE Score: {report.srie_score:.1f}, Maturity: {report.maturity_level}",
+                "data": {"score": report.srie_score, "maturity": report.maturity_level},
+            })
+
         return report
 
     def twin(self) -> DigitalTwin | None:
@@ -106,10 +122,55 @@ class SDK:
     def manifest(self) -> Manifest | None:
         return self._manifest_service.load(self._path)
 
+    def operational_age(self) -> dict:
+        self._ensure_path()
+        return self._runtime.operational_age()
+
+    def pause(self) -> None:
+        self._ensure_booted()
+        self._runtime.pause()
+
+    def resume(self) -> Project:
+        self._project = self._runtime.resume(self._path)
+        return self._project
+
+    def checkpoint(self) -> int:
+        self._ensure_booted()
+        return self._runtime.checkpoint()
+
+    def journal(self, limit: int = 10) -> list[dict]:
+        self._ensure_path()
+        j = self._runtime.journal()
+        if j:
+            return j.recent(limit)
+        return []
+
+    def cognitive(self) -> dict:
+        self._ensure_path()
+        c = self._runtime.cognitive()
+        if c:
+            return c.snapshot()
+        return {"hypotheses": {}, "total": 0}
+
+    def intent(self) -> dict:
+        self._ensure_path()
+        i = self._runtime.intent()
+        if i:
+            return i.current()
+        return {"objective": None}
+
+    def operational_age(self) -> dict:
+        self._ensure_path()
+        return self._runtime.operational_age()
+
     def plan(self):
         self._ensure_booted()
         from srie.sdk.models import Plan
         return Plan(objectives=["Improve project maturity"])
+
+    def _ensure_path(self) -> None:
+        if not self._runtime.path:
+            self._runtime._init_path(self._path)
 
     def _ensure_booted(self) -> None:
         if not self._project:

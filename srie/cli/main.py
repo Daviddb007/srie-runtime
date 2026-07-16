@@ -31,6 +31,7 @@ from srie.cli.commands import identity as identity_cmd
 from srie.cli.commands import discover as discover_cmd
 from srie.cli.commands import indicators as indicators_cmd
 from srie.cli.commands import runtime as runtime_cmd
+from srie.cli.commands import inspect as inspect_cmd
 
 @app.command()
 def doctor():
@@ -152,6 +153,38 @@ def dna(
 ):
     """Show work DNA (aggregated session patterns)."""
     runtime_cmd.cmd_dna(project_path)
+
+
+@app.command()
+def inspect(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    section: str = typer.Argument(None, help="Section: identity, runtime, cognitive, tasks, modules, workspace, health"),
+):
+    """Inspect SRIE runtime state tree."""
+    inspect_cmd.cmd_inspect(project_path, section)
+
+@app.command()
+def why(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Explain why the runtime is in its current state."""
+    inspect_cmd.cmd_why(project_path)
+
+@app.command()
+def explain(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    topic: str = typer.Argument("system", help="Topic: system, score, decision, or 'hypothesis <id>'"),
+):
+    """Explain a decision, hypothesis, or system state."""
+    inspect_cmd.cmd_explain(project_path, topic)
+
+@app.command()
+def history(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    limit: int = typer.Option(20, "--limit", "-n", help="Number of events"),
+):
+    """Show recent runtime history."""
+    inspect_cmd.cmd_history(project_path, limit)
 
 
 if __name__ == "__main__":

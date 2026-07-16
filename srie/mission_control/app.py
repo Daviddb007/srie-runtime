@@ -130,6 +130,17 @@ def api_dna():
     return jsonify(wl.dna())
 
 
+@app.route("/api/executions")
+def api_executions():
+    sdk = _get_sdk()
+    from srie.kernel.execution import ExecutionOrchestrator
+    o = ExecutionOrchestrator(sdk.path)
+    return jsonify({
+        "status": o.execution_status(),
+        "executions": o.list_executions(),
+    })
+
+
 def _get_sdk():
     if _SDK_INSTANCE:
         return _SDK_INSTANCE

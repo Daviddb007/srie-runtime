@@ -34,6 +34,7 @@ from srie.cli.commands import runtime as runtime_cmd
 from srie.cli.commands import inspect as inspect_cmd
 from srie.cli.commands import universe as universe_cmd
 from srie.cli.commands import studio as studio_cmd
+from srie.cli.commands import execution as execution_cmd
 
 @app.command()
 def doctor():
@@ -259,6 +260,58 @@ def serve(
 ):
     """Start SRIE Mission Control web interface."""
     studio_cmd.cmd_serve(project_path, host, port)
+
+
+exec_typer = typer.Typer(name="exec", help="Execution Orchestrator commands")
+app.add_typer(exec_typer)
+
+@exec_typer.command()
+def create(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    goal: str = typer.Option("default", "--goal", "-g", help="Execution goal"),
+    priority: str = typer.Option("medium", "--priority", "-p", help="Priority: low, medium, high"),
+):
+    """Create a new execution."""
+    execution_cmd.cmd_create(project_path, goal, priority)
+
+@exec_typer.command()
+def start(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    exec_id: str = typer.Argument(..., help="Execution ID"),
+):
+    """Start an execution."""
+    execution_cmd.cmd_start(project_path, exec_id)
+
+@exec_typer.command()
+def complete(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    exec_id: str = typer.Argument(..., help="Execution ID"),
+):
+    """Mark execution as completed."""
+    execution_cmd.cmd_complete(project_path, exec_id)
+
+@exec_typer.command()
+def workflow(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    exec_id: str = typer.Argument(..., help="Execution ID"),
+    name: str = typer.Option("default", "--name", "-n", help="Workflow name"),
+):
+    """Add a workflow to an execution."""
+    execution_cmd.cmd_workflow(project_path, exec_id, name)
+
+@exec_typer.command()
+def status(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Show execution status overview."""
+    execution_cmd.cmd_status(project_path)
+
+@exec_typer.command()
+def list(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """List all executions."""
+    execution_cmd.cmd_list(project_path)
 
 
 if __name__ == "__main__":

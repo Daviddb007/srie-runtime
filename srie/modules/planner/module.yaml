@@ -1,0 +1,15 @@
+id: planner
+version: "1.0.0"
+entrypoint: planner.py
+kind: module
+depends_on:
+  - indicators
+  - discovery
+provides:
+  - planner
+produces:
+  - type: Plan
+    fields: [objectives, capabilities, priorities, risks]
+consumes:
+  - type: DigitalTwin
+  - type: IndicatorReport

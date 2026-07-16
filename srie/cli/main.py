@@ -36,6 +36,7 @@ from srie.cli.commands import universe as universe_cmd
 from srie.cli.commands import studio as studio_cmd
 from srie.cli.commands import execution as execution_cmd
 from srie.cli.commands import pdl as pdl_cmd
+from srie.cli.commands import planner as planner_cmd
 
 @app.command()
 def doctor():
@@ -348,6 +349,32 @@ def list(
 ):
     """List saved PDL definitions."""
     pdl_cmd.cmd_list(project_path)
+
+
+@app.command()
+def plan(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    goal: str = typer.Option("Build MVP", "--goal", "-g", help="Goal to plan"),
+    priority: str = typer.Option("medium", "--priority", "-p", help="Priority"),
+):
+    """Plan and optimize a workflow from a goal."""
+    planner_cmd.cmd_from_goal(project_path, goal, priority)
+
+@app.command()
+def simulate(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    goal: str = typer.Option("Build MVP", "--goal", "-g", help="Goal to simulate"),
+):
+    """Simulate a workflow execution (cost, time, efficiency)."""
+    planner_cmd.cmd_simulate(project_path, goal)
+
+@app.command()
+def orchestrate(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    goal: str = typer.Option("Build MVP", "--goal", "-g", help="Goal to plan and execute"),
+):
+    """Plan, optimize, and execute in one command."""
+    planner_cmd.cmd_execute(project_path, goal)
 
 
 if __name__ == "__main__":

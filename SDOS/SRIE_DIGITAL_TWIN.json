@@ -1,0 +1,58 @@
+{
+  "digital_twin": {
+    "project_id": "DOM-20260716045718-3466",
+    "version": 1,
+    "last_sync": "2026-07-16T04:59:01.921111+00:00",
+    "metrics": {},
+    "nodes": [
+      {
+        "id": "PROJECT",
+        "type": "raiz",
+        "label": "srie-runtime",
+        "state": "SYNCED",
+        "metadata": {}
+      },
+      {
+        "id": "LANGUAGES",
+        "type": "dominio",
+        "label": "Languages",
+        "state": "SYNCED",
+        "metadata": {}
+      },
+      {
+        "id": "TESTS",
+        "type": "dominio",
+        "label": "Tests",
+        "state": "SYNCED",
+        "metadata": {}
+      },
+      {
+        "id": "VCS",
+        "type": "dominio",
+        "label": "Version Control",
+        "state": "SYNCED",
+        "metadata": {}
+      }
+    ],
+    "relationships": [
+      {
+        "source": "PROJECT",
+        "target": "LANGUAGES",
+        "type": "contains",
+        "weight": 1.0
+      },
+      {
+        "source": "PROJECT",
+        "target": "TESTS",
+        "type": "contains",
+        "weight": 1.0
+      },
+      {
+        "source": "PROJECT",
+        "target": "VCS",
+        "type": "contains",
+        "weight": 1.0
+      }
+    ]
+  }
+}

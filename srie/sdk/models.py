@@ -177,3 +177,4 @@ class Project:
     registry: Registry | None = None
     indicators: IndicatorReport | None = None
     manifest: Manifest | None = None
+    modules: list[ModuleInfo] = field(default_factory=list)

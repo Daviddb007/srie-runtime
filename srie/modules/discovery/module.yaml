@@ -1,0 +1,19 @@
+id: discovery
+version: "1.0.0"
+entrypoint: scanner.py
+kind: module
+
+depends_on:
+  - registry
+  - identity
+
+provides:
+  - discovery
+
+produces:
+  - type: DiscoveryResult
+    fields: [languages, frameworks, files, git, dependencies, graph]
+
+consumes:
+  - type: Project
+    via: project_path

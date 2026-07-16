@@ -1,0 +1,13 @@
+registry:
+  capabilities: []
+  domains: []
+  entities:
+    identity:
+      registered_at: '2026-07-16T04:59:01.750935+00:00'
+      state: ACTIVE
+      version: 1.0.0
+    registry:
+      registered_at: '2026-07-16T04:59:01.762160+00:00'
+      state: ready
+      version: 1.0.0
+  updated: '2026-07-16T04:59:01.762191+00:00'

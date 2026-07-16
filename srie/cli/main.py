@@ -28,6 +28,8 @@ def main(
 
 from srie.cli.commands import init as init_cmd
 from srie.cli.commands import identity as identity_cmd
+from srie.cli.commands import discover as discover_cmd
+from srie.cli.commands import indicators as indicators_cmd
 from srie.cli.commands import runtime as runtime_cmd
 
 @app.command()
@@ -60,6 +62,21 @@ def init(
 ):
     """Initialize SRIE in a project directory."""
     init_cmd.cmd(project_path, verbose)
+
+@app.command()
+def discover(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
+):
+    """Discover project structure and technologies."""
+    discover_cmd.cmd(project_path, verbose)
+
+@app.command()
+def indicators(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Calculate project maturity indicators."""
+    indicators_cmd.cmd(project_path)
 
 runtime_typer = typer.Typer(name="runtime", help="Runtime management commands")
 app.add_typer(runtime_typer)

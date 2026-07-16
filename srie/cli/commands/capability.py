@@ -29,7 +29,7 @@ def cmd_match(project_path: str = ".", action: str = "discover"):
 
 
 def cmd_plan(project_path: str = ".", goal: str = "Build MVP"):
-    from srie.modules.planner.planner import PlannerEngine
+    from srie.modules.planner.engine import PlannerEngine
     plan = PlannerEngine(Path(project_path).resolve()).plan_from_goal(goal)
     steps = plan["steps"]
     eng = _cap(project_path)

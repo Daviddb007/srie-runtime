@@ -1,5 +1,5 @@
 from pathlib import Path
-from srie.modules.planner.planner import PlannerEngine
+from srie.modules.planner.engine import PlannerEngine
 
 
 class TestPlanner:

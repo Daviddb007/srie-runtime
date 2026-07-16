@@ -1,4 +1,4 @@
-from srie.modules.planner.planner import PlannerEngine
+from srie.modules.planner.engine import PlannerEngine
 from pathlib import Path
 
 

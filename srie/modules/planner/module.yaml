@@ -1,6 +1,6 @@
 id: planner
 version: "1.0.0"
-entrypoint: planner.py
+entrypoint: engine.py
 kind: module
 depends_on:
   - indicators

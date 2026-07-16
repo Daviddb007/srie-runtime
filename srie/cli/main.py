@@ -26,6 +26,10 @@ def main(
 ):
     pass
 
+from srie.cli.commands import init as init_cmd
+from srie.cli.commands import identity as identity_cmd
+from srie.cli.commands import runtime as runtime_cmd
+
 @app.command()
 def doctor():
     """Check if SRIE Runtime is properly installed."""
@@ -41,6 +45,31 @@ def doctor():
         typer.echo("[FAIL] PyYAML not installed")
 
     typer.echo("\nSRIE Runtime is ready.")
+
+@app.command()
+def identity(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Show or create project identity."""
+    identity_cmd.cmd(project_path)
+
+@app.command()
+def init(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
+):
+    """Initialize SRIE in a project directory."""
+    init_cmd.cmd(project_path, verbose)
+
+runtime_typer = typer.Typer(name="runtime", help="Runtime management commands")
+app.add_typer(runtime_typer)
+
+@runtime_typer.command()
+def status(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """Show runtime status."""
+    runtime_cmd.cmd(project_path)
 
 
 if __name__ == "__main__":

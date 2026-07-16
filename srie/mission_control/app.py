@@ -122,6 +122,52 @@ def api_sessions():
     })
 
 
+@app.route("/api/workbench")
+def api_workbench():
+    sdk = _get_sdk()
+    from srie.kernel.execution import ExecutionOrchestrator
+    o = ExecutionOrchestrator(sdk.path)
+    status = o.execution_status()
+    executions = o.list_executions()
+    result = []
+    for e in executions[:20]:
+        result.append({
+            "id": e["id"],
+            "goal": e["goal"][:80],
+            "state": e["state"],
+            "progress": e.get("progress", 0),
+            "priority": e.get("priority", "medium"),
+            "created": (e.get("created") or "")[:19],
+            "started": (e.get("started") or "")[:19] if e.get("started") else None,
+            "completed": (e.get("completed") or "")[:19] if e.get("completed") else None,
+            "workflows": len(e.get("workflows", [])),
+        })
+    return jsonify({
+        "status": status,
+        "executions": result,
+    })
+
+
+@app.route("/api/workbench/execution/<exec_id>")
+def api_workbench_execution(exec_id: str):
+    sdk = _get_sdk()
+    from srie.kernel.execution import ExecutionOrchestrator
+    o = ExecutionOrchestrator(sdk.path)
+    execution = o.load_execution(exec_id)
+    if not execution:
+        return jsonify({"error": "Execution not found"}), 404
+
+    workflows = []
+    for wf_id in execution.get("workflows", []):
+        wf = o._load_workflow(wf_id)
+        if wf:
+            workflows.append(wf)
+    return jsonify({
+        "execution": execution,
+        "workflows": workflows,
+    })
+
+
 @app.route("/api/dna")
 def api_dna():
     sdk = _get_sdk()

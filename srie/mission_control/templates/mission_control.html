@@ -60,6 +60,7 @@
     <a class="room" data-room="operations" onclick="switchRoom('operations')">Operations</a>
     <a class="room" data-room="intelligence" onclick="switchRoom('intelligence')">Intelligence</a>
     <a class="room" data-room="knowledge" onclick="switchRoom('knowledge')">Knowledge</a>
+    <a class="room" data-room="workbench" onclick="switchRoom('workbench')">Workbench</a>
     <a class="room" data-room="governance" onclick="switchRoom('governance')">Governance</a>
   </nav>
   <main class="main">
@@ -81,6 +82,7 @@ const ROOMS = {
   operations: { title: 'Operations', status: 'Runtime Active', load: loadOperations },
   intelligence: { title: 'Intelligence', status: 'Cognitive Active', load: loadIntelligence },
   knowledge: { title: 'Knowledge', status: 'Journal Active', load: loadKnowledge },
+  workbench: { title: 'Workbench', status: 'Executions Active', load: loadWorkbench },
   governance: { title: 'Governance', status: 'Identity Active', load: loadGovernance },
 };
 
@@ -268,6 +270,35 @@ function renderTree(node, depth = 0) {
     node.children.forEach(c => { html += renderTree(c, depth + 1); });
   }
   return html;
+}
+
+async function loadWorkbench() {
+  loading();
+  const data = await fetchJSON('/api/workbench');
+  const status = data.status || {};
+  const execs = data.executions || [];
+  let html = `<div class="grid">
+    <div class="card"><h3>Total Executions</h3><div class="value blue">${status.total || 0}</div></div>
+    <div class="card"><h3>Running</h3><div class="value green">${status.running || 0}</div></div>
+    <div class="card"><h3>Pending</h3><div class="value amber">${status.pending || 0}</div></div>
+    <div class="card"><h3>Completed</h3><div class="value blue">${status.completed || 0}</div></div>
+  </div>`;
+  if (execs.length > 0) {
+    html += `<div class="card" style="margin-top:16px"><h3>Executions</h3>`;
+    execs.forEach(e => {
+      const stateClass = e.state === 'RUNNING' ? 'green' : e.state === 'COMPLETED' ? 'blue' : e.state === 'BLOCKED' ? 'amber' : 'blue';
+      html += `<div class="event">
+        <span class="src">${e.id}</span>
+        <span class="value" style="color:var(--${stateClass})">[${e.state}]</span>
+        ${e.goal}
+        <span class="ts">${e.progress}% | ${e.priority} | ${e.created}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div class="card" style="margin-top:16px"><p>No executions yet. Define one with PDL: <code>srie pdl template && srie pdl run</code></p></div>`;
+  }
+  setContent(html);
 }
 
 switchRoom('{{ room }}');

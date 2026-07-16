@@ -35,6 +35,7 @@ from srie.cli.commands import inspect as inspect_cmd
 from srie.cli.commands import universe as universe_cmd
 from srie.cli.commands import studio as studio_cmd
 from srie.cli.commands import execution as execution_cmd
+from srie.cli.commands import pdl as pdl_cmd
 
 @app.command()
 def doctor():
@@ -312,6 +313,41 @@ def list(
 ):
     """List all executions."""
     execution_cmd.cmd_list(project_path)
+
+
+pdl_typer = typer.Typer(name="pdl", help="Process Definition Language commands")
+app.add_typer(pdl_typer)
+
+@pdl_typer.command()
+def validate(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    file: str = typer.Option("", "--file", "-f", help="PDL file path"),
+):
+    """Validate a PDL definition."""
+    pdl_cmd.cmd_validate(project_path, file)
+
+@pdl_typer.command()
+def run(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    file: str = typer.Option("", "--file", "-f", help="PDL file path"),
+):
+    """Execute a PDL definition."""
+    pdl_cmd.cmd_run(project_path, file)
+
+@pdl_typer.command()
+def template(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    name: str = typer.Option("my-process", "--name", "-n", help="Template name"),
+):
+    """Generate a PDL template."""
+    pdl_cmd.cmd_template(project_path, name)
+
+@pdl_typer.command()
+def list(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+):
+    """List saved PDL definitions."""
+    pdl_cmd.cmd_list(project_path)
 
 
 if __name__ == "__main__":

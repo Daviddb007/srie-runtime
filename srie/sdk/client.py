@@ -62,8 +62,8 @@ class SDK:
         )
         self._twin_repo.save(self._path, twin)
 
-        if self._runtime.journal():
-            self._runtime.journal().append({
+        if self._journal():
+            self._journal().append({
                 "type": "DISCOVERY_COMPLETE",
                 "source": "module:discovery",
                 "message": f"Discovered {len(result.languages)} languages, {len(result.frameworks)} frameworks, {result.files.total if result.files else 0} files",
@@ -71,6 +71,12 @@ class SDK:
             })
 
         return result
+
+    def _journal(self):
+        try:
+            return self._journal()
+        except RuntimeError:
+            return None
 
     def indicators(self) -> IndicatorReport:
         twin = self._twin_repo.load(self._path)
@@ -103,8 +109,8 @@ class SDK:
             twin.version += 1
             self._twin_repo.save(self._path, twin)
 
-        if self._runtime.journal():
-            self._runtime.journal().append({
+        if self._journal():
+            self._journal().append({
                 "type": "INDICATORS_CALCULATED",
                 "source": "module:indicators",
                 "message": f"SRIE Score: {report.srie_score:.1f}, Maturity: {report.maturity_level}",
@@ -140,7 +146,7 @@ class SDK:
 
     def journal(self, limit: int = 10) -> list[dict]:
         self._ensure_path()
-        j = self._runtime.journal()
+        j = self._journal()
         if j:
             return j.recent(limit)
         return []
@@ -172,8 +178,8 @@ class SDK:
         from srie.kernel.session import Session
         s = Session(self._path)
         session = s.start(user=user)
-        if self._runtime.journal():
-            self._runtime.journal().append({
+        if self._journal():
+            self._journal().append({
                 "type": "SESSION_STARTED",
                 "source": "kernel",
                 "message": f"Session {session['id']} started by {user}",
@@ -185,8 +191,8 @@ class SDK:
         from srie.kernel.session import Session
         s = Session(self._path)
         session = s.end()
-        if self._runtime.journal():
-            self._runtime.journal().append({
+        if self._journal():
+            self._journal().append({
                 "type": "SESSION_ENDED",
                 "source": "kernel",
                 "message": f"Session {session['id']} ended — {session['duration_seconds']}s",

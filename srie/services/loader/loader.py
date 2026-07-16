@@ -34,7 +34,7 @@ class ModuleLoader:
         info = ModuleInfo(id=mod["id"], version=mod.get("version", "0.1.0"))
 
         if not entrypoint.exists():
-            info.state = "ERROR"
+            info.state = "DEGRADED"
             return info
 
         try:
@@ -48,6 +48,6 @@ class ModuleLoader:
                 self._loaded[mod["id"]] = module
                 info.state = "LOADED"
         except Exception:
-            info.state = "ERROR"
+            info.state = "DEGRADED"
 
         return info

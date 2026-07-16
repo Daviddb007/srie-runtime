@@ -99,6 +99,8 @@ class Universe:
         return chain
 
     def twin(self) -> dict:
+        if not self._path.exists():
+            return {"total_organizations": 0, "total_workspaces": 0, "total_projects": 0, "total_domains": 0, "organizations": [], "workspaces": [], "projects": [], "domains": [], "state": "NOT_INITIALIZED"}
         data = self.load()
         uni = data.get("universe", {})
         orgs = uni.get("organizations", [])

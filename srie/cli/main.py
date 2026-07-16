@@ -42,20 +42,109 @@ from srie.cli.commands import ops as ops_cmd
 from srie.cli.commands import knowledge as knowledge_cmd
 
 @app.command()
-def doctor():
-    """Check if SRIE Runtime is properly installed."""
-    typer.echo(f"[OK] srie-runtime v{__version__}")
-    typer.echo("[OK] CLI registered")
-    typer.echo("[OK] Kernel package found")
-    typer.echo("[OK] SDK package found")
+def doctor(
+    project_path: str = typer.Argument(".", help="Path to the project"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
+):
+    """Full system health check."""
+    from pathlib import Path
+    pp = Path(project_path).resolve()
 
+    typer.echo("SRIE Doctor — Health Check")
+    typer.echo("=" * 40)
+
+    # Python
+    import sys
+    typer.echo(f"Python ............ [OK] {sys.version[:5]}")
+
+    # CLI
+    typer.echo(f"CLI ............... [OK] v{__version__}")
+
+    # SDK
+    try:
+        from srie import SDK
+        typer.echo("SDK ............... [OK]")
+    except ImportError:
+        typer.echo("SDK ............... [FAIL]")
+
+    # PyYAML
     try:
         import yaml
-        typer.echo(f"[OK] PyYAML {yaml.__version__}")
+        typer.echo(f"PyYAML ............ [OK] {yaml.__version__}")
     except ImportError:
-        typer.echo("[FAIL] PyYAML not installed")
+        typer.echo("PyYAML ............ [FAIL]")
 
-    typer.echo("\nSRIE Runtime is ready.")
+    # Studio
+    try:
+        import stonelytics
+        typer.echo("Studio ............ [OK]")
+    except ImportError:
+        typer.echo("Studio ............ [--] Not installed")
+
+    # Runtime
+    try:
+        from srie.kernel.manifest import ManifestService
+        m = ManifestService()
+        manifest = m.load(pp)
+        if manifest:
+            state = manifest.state
+            mods = len(manifest.modules)
+            loaded = sum(1 for mo in manifest.modules if mo.state == "LOADED")
+            degraded = sum(1 for mo in manifest.modules if mo.state == "DEGRADED")
+            typer.echo(f"Runtime ........... [OK] {state} ({loaded}/{mods} modules" + (f", {degraded} degraded)" if degraded else ")"))
+        else:
+            typer.echo("Runtime ........... [--] Not initialized (run srie init)")
+    except Exception:
+        typer.echo("Runtime ........... [--] Not initialized")
+
+    # Universe
+    try:
+        from srie.kernel.universe import Universe
+        u = Universe(pp)
+        twin = u.twin()
+        if twin.get("state") != "NOT_INITIALIZED":
+            orgs = twin["total_organizations"]
+            ws = twin["total_workspaces"]
+            projs = twin["total_projects"]
+            typer.echo(f"Universe .......... [OK] {orgs} orgs, {ws} workspaces, {projs} projects")
+        else:
+            typer.echo("Universe .......... [--] Not initialized")
+    except Exception:
+        typer.echo("Universe .......... [--] Not initialized")
+
+    # Knowledge
+    try:
+        from srie.services.knowledge import KnowledgeEngine
+        k = KnowledgeEngine(pp)
+        pats = len(k.list_patterns())
+        cases = len(k.list_cases())
+        reuse = k.reuse_rate()
+        typer.echo(f"Knowledge ......... [{'OK' if pats > 0 or cases > 0 else '--'}] {pats} patterns, {cases} cases, {reuse}% reuse")
+    except Exception:
+        typer.echo("Knowledge ......... [--]")
+
+    # Deployment
+    try:
+        from srie.services.deployment import Deployment
+        d = Deployment(pp)
+        targets = d.list_targets()
+        typer.echo(f"Deployment ........ [{'OK' if targets else '--'}] {len(targets)} targets configured")
+    except Exception:
+        typer.echo("Deployment ........ [--]")
+
+    # SDOS structure
+    sdos = pp / "SDOS"
+    if sdos.exists():
+        try:
+            file_count = sum(1 for _ in sdos.rglob("*"))
+            typer.echo(f"SDOS .............. [OK] {file_count} files")
+        except Exception:
+            typer.echo("SDOS .............. [OK] (readable)")
+    else:
+        typer.echo("SDOS .............. [--] Not found")
+
+    typer.echo("\n" + "=" * 40)
+    typer.echo("SRIE Doctor — Complete")
 
 @app.command()
 def identity(
